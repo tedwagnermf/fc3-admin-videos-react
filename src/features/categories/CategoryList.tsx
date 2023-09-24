@@ -6,8 +6,8 @@ import {
   Typography,
   debounce,
 } from "@mui/material";
-import { useAppSelector } from "../../app/hooks";
-import { selectCategories } from "./categorySlice";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { deleteCategory, selectCategories } from "./categorySlice";
 import {
   DataGrid,
   GridColDef,
@@ -15,9 +15,15 @@ import {
   GridToolbar,
 } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import { link } from "fs";
+import { useHref } from "react-router-dom";
+import { useSnackbar } from "notistack";
 
 export const CategoryList = () => {
   const categories = useAppSelector(selectCategories);
+  const dispatch = useAppDispatch();
+  const { enqueueSnackbar } = useSnackbar();
 
   const rows: GridRowsProp = categories.map((category) => ({
     id: category.id,
@@ -32,6 +38,13 @@ export const CategoryList = () => {
       field: "name",
       headerName: "Name",
       flex: 1,
+      renderCell: (row) => {
+        return (
+          <Link href={`/categories/edit/${row.id}`} underline="hover">
+            {row.value}
+          </Link>
+        );
+      },
     },
     {
       field: "description",
@@ -56,15 +69,31 @@ export const CategoryList = () => {
       headerName: "Created At",
       flex: 1,
     },
+    // {
+    //   field: "updatedAt",
+    //   headerName: "Edit",
+    //   flex: 1,
+    //   renderCell: (row) => {
+    //     return (
+    //       <IconButton
+    //         color="primary"
+    //         onClick={() => console.log("edited")}
+    //         aria-label="edit"
+    //       >
+    //         <EditIcon />
+    //       </IconButton>
+    //     );
+    //   },
+    // },
     {
       field: "id",
-      headerName: "Actions",
+      headerName: "Delete",
       flex: 1,
       renderCell: (row) => {
         return (
           <IconButton
             color="secondary"
-            onClick={() => console.log("clicked")}
+            onClick={() => handleDeleteCategory(row.value)}
             aria-label="delete"
           >
             <DeleteIcon />
@@ -73,6 +102,12 @@ export const CategoryList = () => {
       },
     },
   ];
+
+  function handleDeleteCategory(id: string) {
+    console.log(id);
+    dispatch(deleteCategory(id));
+    enqueueSnackbar("Category deleted successfully", { variant: "success" });
+  }
 
   return (
     <Box maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -88,7 +123,7 @@ export const CategoryList = () => {
         </Button>
       </Box>
 
-      <div style={{ height: 300, width: "100%" }}>
+      <Box sx={{ display: "flex", height: 600 }}>
         <DataGrid
           columns={columns}
           rows={rows}
@@ -103,7 +138,7 @@ export const CategoryList = () => {
             },
           }}
         />
-      </div>
+      </Box>
     </Box>
   );
 };
